@@ -12,6 +12,7 @@ export class ProductService {
   private productsUrl = 'api/products';
   private suppliersUrl = 'api/suppliers';
   
+  //to transform data using the following
   products$ = this.http.get<Product[]>(this.productsUrl)
   .pipe(
     map(products  => 

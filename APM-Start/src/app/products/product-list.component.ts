@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 
-import { catchError, EMPTY, filter, from, map, Observable, of, Subscription } from 'rxjs';
+import { catchError, combineLatest, EMPTY, filter, from, map, Observable, of, Subject, Subscription } from 'rxjs';
 import { ProductCategory } from '../product-categories/product-category';
 import { ProductCategoryService } from "../product-categories/product-category.service";
 
@@ -16,25 +16,41 @@ export class ProductListComponent  {
   pageTitle = 'Product List';
   errorMessage = '';
   // categories: ProductCategory[] = [];
-  selectedCategoryId!: number
+  // selectedCategoryId!: number
+  private categorySelectedSubject = new Subject<number>();
+  categorySelectedAction$ = this.categorySelectedSubject.asObservable()
 
-  products$ = this.productService.productsWithCategory$
-  .pipe(
-    catchError(e => {
-      this.errorMessage = e;
-      // return EMPTY
-      // return from([])
-      return of([])
-    })
-   );
+  products$ = combineLatest([
+    this.productService.productsWithCategory$,
+    this.categorySelectedAction$
+  ])
+    .pipe(
+      map(([products, selectedCatogoryId]) => 
+      products.filter(product => 
+        selectedCatogoryId ? product.categoryId === selectedCatogoryId : true
+        )),
+        catchError(error  => {
+          this.errorMessage = error;
+          return EMPTY
+        }))
+
+  // products$ = this.productService.productsWithCategory$
+  // .pipe(
+  //   catchError(e => {
+  //     this.errorMessage = e;
+  //     // return EMPTY
+  //     // return from([])
+  //     return of([])
+  //   })
+  //  );
  
-   productsSimpleFilter$ = this.productService.productsWithCategory$
-   .pipe(
-      map((products: any) =>  
-        products.filter(( product: any) => {
-          return this.selectedCategoryId ? product.categoryId === this.selectedCategoryId : true
-        }
-  )))
+  //  productsSimpleFilter$ = this.productService.productsWithCategory$
+  //  .pipe(
+  //     map((products: any) =>  
+  //       products.filter(( product: any) => {
+  //         return this.selectedCategoryId ? product.categoryId === this.selectedCategoryId : true
+  //       }
+  // )))
   categories$ = this.productCategoryService.productCategories$
   .pipe(
 
@@ -52,6 +68,10 @@ export class ProductListComponent  {
   }
 
   onSelected(categoryId: string): void {
-    this.selectedCategoryId = +categoryId
+    // this.selectedCategoryId = +categoryId
+
+    console.log('CategoryID', categoryId)
+
+    this.categorySelectedSubject.next(+categoryId)
   }
 }

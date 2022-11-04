@@ -65,6 +65,9 @@ export class ProductService {
 
   constructor(private http: HttpClient, private productCategoryService: ProductCategoryService) { }
 
+  selectedProductChanged(selectedProductId: number) {
+    this.productSelectedSubject.next(selectedProductId)
+  }
 
   private fakeProduct(): Product {
     return {
